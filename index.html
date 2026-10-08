@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sky Team</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='4' y='4' width='92' height='92' rx='18' fill='%2312284a'/><path transform='translate(14 12) scale(3)' fill='%23ffffff' d='M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z'/><circle cx='20' cy='82' r='9' fill='%233d8eff'/><circle cx='80' cy='82' r='9' fill='%23ff9838'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;700;800&family=Orbitron:wght@700;800&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+:root{
+  --bg1:#081322; --bg2:#12284a; --panel:#131c2b; --panel2:#18233a; --inst:#0b111b; --line:#273550; --ink:#e8eef8; --muted:#8b9cb5;
+  --pB:#3d8eff; --pBl:#8fc1ff; --pBd:#1b55ad;
+  --pO:#ff9838; --pOl:#ffc68d; --pOd:#bf620c;
+  --led:#36de88; --red:#ff5b5b; --amber:#ffc64a; --gold:#e7a93c;
+  --ds:40px; --radius:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:"Be Vietnam Pro",system-ui,"Segoe UI",sans-serif;color:var(--ink);
+  background:radial-gradient(ellipse at 50% -10%,#2b4f86 0,transparent 55%),linear-gradient(180deg,var(--bg1),var(--bg2) 70%,#1d3a63);
+  background-attachment:fixed;
+}
+button{font-family:inherit;cursor:pointer}
+.hidden{display:none!important}
+.num{font-family:"Orbitron",monospace;letter-spacing:.5px}
+.small{font-size:.85rem;color:var(--muted);font-weight:500}
+.bad{color:var(--red)}
+
+/* ---------- Lobby ---------- */
+#lobby{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.lobby-card{
+  width:100%;max-width:440px;background:var(--panel);border-radius:28px;padding:26px 24px;
+  box-shadow:0 18px 50px rgba(0,0,0,.45);text-align:center;border:2px solid var(--line);
+}
+.logo{display:flex;justify-content:center;align-items:center;gap:12px}
+.logo svg{width:58px;height:58px;fill:#fff;transform:rotate(45deg);filter:drop-shadow(0 4px 8px rgba(0,0,0,.5))}
+h1{margin:10px 0 0;font-family:"Orbitron",sans-serif;font-weight:800;font-size:2.5rem;line-height:1;letter-spacing:2px}
+h1 .b{color:var(--pB)} h1 .o{color:var(--pO)}
+.tag{color:var(--muted);margin:6px 0 16px}
+label{display:block;text-align:left;font-weight:700;font-size:.92rem;margin:12px 0 5px}
+input[type=text],input:not([type]){
+  width:100%;font:inherit;font-size:1.02rem;padding:10px 14px;border-radius:12px;
+  border:2px solid var(--line);background:#0d1522;color:var(--ink);outline:none;
+}
+input:focus{border-color:var(--pB)}
+#codeInput{text-transform:uppercase;letter-spacing:4px;text-align:center;font-weight:800}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;padding:9px 10px;border-radius:12px;border:2px solid var(--line);background:#0d1522;color:var(--muted);font-weight:800;font-size:.98rem}
+.seg button.on.r0{border-color:var(--pB);background:rgba(61,142,255,.18);color:#fff}
+.seg button.on.r1{border-color:var(--pO);background:rgba(255,152,56,.18);color:#fff}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:14px;
+  padding:10px 16px;font-size:1rem;font-weight:800;color:#fff;background:#2c3c58;
+  box-shadow:0 4px 0 #18233a;transition:transform .08s, box-shadow .08s;
+}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #18233a}
+.btn.blue{background:var(--pB);box-shadow:0 4px 0 var(--pBd)}
+.btn.green{background:#20a565;box-shadow:0 4px 0 #13703f}
+.btn.gold{background:var(--gold);color:#2a1a00;box-shadow:0 4px 0 #a2701b}
+.btn.red{background:#d9443f;box-shadow:0 4px 0 #8d2420}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line);box-shadow:none;padding:6px 12px;font-size:.92rem}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.row{display:flex;gap:10px;margin-top:14px}
+.row>*{flex:1}
+.or{margin:18px 0 0;color:var(--muted);display:flex;align-items:center;gap:10px}
+.or:before,.or:after{content:"";flex:1;height:2px;background:var(--line)}
+.msg{min-height:1.4em;margin-top:12px;color:var(--red);font-weight:700}
+.waiting .code{
+  font-family:"Orbitron",sans-serif;font-size:2.4rem;font-weight:800;letter-spacing:8px;color:var(--amber);
+  background:#0d1522;border:3px dashed var(--amber);border-radius:18px;padding:6px 10px;margin:10px 0;
+}
+.waiting .link{font-size:.85rem;word-break:break-all;color:var(--muted);margin:8px 0}
+.dots:after{content:"";animation:dots 1.4s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+
+/* ---------- Game ---------- */
+#game{max-width:1220px;margin:0 auto;padding:10px 16px 24px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+header .title{font-family:"Orbitron",sans-serif;font-weight:800;font-size:1.45rem;letter-spacing:1.5px;line-height:1}
+header .title .b{color:var(--pB)} header .title .o{color:var(--pO)}
+header .info{font-weight:700;color:var(--muted);font-size:.92rem}
+header .info b{color:var(--ink)}
+header .sp{flex:1}
+.chip{padding:4px 12px;border-radius:999px;font-weight:800;background:#1d2940;color:var(--muted);font-size:.9rem}
+.chip.me{background:#20a565;color:#fff;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(54,222,136,.2)}}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.panel+.panel{margin-top:12px}
+.ptitle{display:flex;align-items:center;gap:8px;font-weight:800;font-size:1rem;margin-bottom:8px}
+
+.banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:10px;min-height:58px}
+.banner.brief{border-color:var(--gold);background:linear-gradient(90deg,rgba(231,169,60,.14),var(--panel2))}
+.banner.turn{border-color:var(--led)}
+.banner.win{border-color:var(--led);background:rgba(54,222,136,.12)}
+.banner.lose{border-color:var(--red);background:rgba(255,91,91,.12)}
+.banner .bt{flex:1;min-width:220px;line-height:1.4}
+.banner .warn{color:var(--amber);font-size:.86rem;font-weight:700}
+.lastMove{font-size:.9rem;color:var(--muted);margin:-4px 2px 8px;min-height:1.3em}
+.lastMove b{color:var(--ink)}
+
+/* cockpit */
+.cockpit{background:linear-gradient(#1a2538,#111926);border:2px solid #2c3b57;border-radius:22px;padding:12px;box-shadow:0 14px 40px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05)}
+.top{display:flex;gap:10px}
+.inst{background:var(--inst);border:1px solid #22304a;border-radius:14px;padding:8px 10px}
+.ih{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:800;margin-bottom:6px}
+.ih span:last-child{text-transform:none;letter-spacing:0;font-weight:600}
+.apprBox{flex:1.75;min-width:0}
+.altBox{flex:1;min-width:0}
+.appr{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.ac{position:relative;height:64px;border-radius:10px;background:#111a28;border:1px solid #23314b;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;align-content:center;gap:1px;padding:12px 2px 14px;transition:opacity .4s}
+.ac.past{opacity:.28}
+.ac.tgt{box-shadow:0 0 0 2px var(--led),0 0 12px rgba(54,222,136,.5);background:#12301f}
+.ac.apt{background:repeating-linear-gradient(90deg,transparent 0 9px,rgba(255,255,255,.05) 9px 11px),linear-gradient(#1e2a3f,#131c2b)}
+.ac .rel{position:absolute;left:5px;top:2px;font-family:"Orbitron",sans-serif;font-size:.62rem;color:#6f81a0;font-weight:700}
+.ac .aptl{position:absolute;right:4px;top:2px;font-size:.62rem;font-weight:800;color:var(--amber)}
+.tp{width:15px;height:15px;fill:#d7dfeb;transform:rotate(-90deg);filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
+.tfx{font-size:.72rem;font-weight:800;color:#d7dfeb}
+.own{position:absolute;top:0;height:100%;width:calc((100% - 24px)/7);left:calc((var(--pos,1) - 1) * ((100% - 24px)/7 + 4px));
+  border:2px solid var(--amber);border-radius:10px;pointer-events:none;transition:left .9s cubic-bezier(.4,1.3,.6,1);
+  display:flex;align-items:flex-end;justify-content:center;box-shadow:0 0 14px rgba(255,198,74,.3)}
+.own svg{width:20px;height:20px;fill:var(--amber);transform:rotate(90deg);margin-bottom:-1px;filter:drop-shadow(0 0 4px rgba(255,198,74,.7))}
+.alt{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.al{position:relative;border-radius:8px;background:#111a28;border:1px solid #23314b;text-align:center;padding:7px 1px 6px;height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:opacity .4s}
+.al b{font-family:"Orbitron",sans-serif;font-size:.58rem;font-weight:700;color:#c3cfe0;letter-spacing:-.3px;max-width:100%;overflow:hidden}
+.al.cur{border-color:var(--amber);background:#2a2410;box-shadow:0 0 12px rgba(255,198,74,.25)}
+.al.cur b{color:var(--amber)}
+.al.past{opacity:.3}
+.al .st{width:9px;height:9px;border-radius:50%}
+.al .st.r0{background:var(--pB)} .al .st.r1{background:var(--pO)}
+.al .rr{font-size:.75rem;font-weight:800;color:var(--led);line-height:1}
+.al .land{font-size:.8rem;line-height:1}
+
+.deck{display:grid;grid-template-columns:172px minmax(0,1fr) 172px;gap:10px;margin-top:10px}
+.col{background:var(--inst);border-radius:14px;padding:8px 6px 10px;border:1px solid #22304a;border-top:3px solid var(--cc)}
+.col.c0{--cc:var(--pB)} .col.c1{--cc:var(--pO)}
+.colh{font-weight:800;text-align:center;font-size:.92rem;color:var(--cc)}
+.colh small{display:block;color:var(--muted);font-weight:600;font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.center{background:var(--inst);border-radius:14px;padding:8px 10px 10px;border:1px solid #22304a;min-width:0}
+.grp{margin-top:9px}
+.grp:first-child{margin-top:0}
+.gh{font-size:.7rem;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:800;margin-bottom:6px;display:flex;gap:6px;align-items:center;justify-content:center}
+.gh .must{color:var(--red);font-size:.62rem;letter-spacing:.4px}
+.slots{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
+.slots.vert{flex-direction:column;align-items:center;gap:4px}
+.sw{display:flex;flex-direction:column;align-items:center}
+.led{width:24px;height:7px;border-radius:4px;background:#2a3446;margin-top:4px;box-shadow:inset 0 1px 2px rgba(0,0,0,.6);transition:.3s}
+.led.on{background:var(--led);box-shadow:0 0 9px var(--led)}
+.slots.vert .sw{flex-direction:row;gap:6px}
+.slots.vert .led{width:7px;height:24px;margin:0}
+
+.slot{--sz:calc(var(--ds) + 8px);width:var(--sz);height:var(--sz);border-radius:11px;border:2px dashed color-mix(in srgb,var(--sc) 65%,transparent);
+  display:grid;place-items:center;background:color-mix(in srgb,var(--sc) 9%,#0b111b);position:relative;transition:box-shadow .2s,border-color .2s,background .2s;flex:none}
+.slot.r0{--sc:var(--pB)} .slot.r1{--sc:var(--pO)} .slot.rx{--sc:#a2aec2}
+.slot .lbl{font-size:.74rem;font-weight:800;color:var(--sc);opacity:.85;font-family:"Orbitron",sans-serif}
+.slot .lbl.t{font-family:"Be Vietnam Pro",sans-serif;font-size:.68rem}
+.slot .mand{position:absolute;top:-6px;right:-6px;width:15px;height:15px;border-radius:50%;background:var(--red);color:#fff;font-size:.62rem;display:grid;place-items:center;font-weight:800}
+.slot.full{border-style:solid;border-color:transparent;background:transparent}
+.slot.ok{cursor:pointer;border-style:solid;border-color:var(--led);box-shadow:0 0 0 3px rgba(54,222,136,.16),0 0 12px rgba(54,222,136,.35)}
+.slot.ok.hv{background:rgba(54,222,136,.2)}
+.slot.ok.warn{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,91,91,.18),0 0 12px rgba(255,91,91,.4)}
+.slot.ok.warn.hv{background:rgba(255,91,91,.2)}
+.slot.lastp .die{box-shadow:0 0 0 3px var(--amber),0 2px 6px rgba(0,0,0,.5)}
+.slot.pop .die{animation:pop .45s ease-out}
+@keyframes pop{0%{transform:scale(1.5);opacity:0}100%{transform:scale(1);opacity:1}}
+
+.die{width:var(--ds);height:var(--ds);border-radius:22%;display:inline-grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:15%;flex:none;vertical-align:middle;
+  background:linear-gradient(145deg,var(--dl),var(--dc) 72%);box-shadow:inset 0 -3px 0 rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.25),0 2px 5px rgba(0,0,0,.45)}
+.die.r0{--dl:#7db4ff;--dc:#1f63cf} .die.r1{--dl:#ffbd75;--dc:#dc6d0c}
+.die i{width:74%;height:74%;border-radius:50%;background:#fff;place-self:center;box-shadow:inset 0 1px 1px rgba(0,0,0,.25)}
+.die.hid{--dl:#34425c;--dc:#1d2638;grid-template:1fr/1fr;place-items:center;color:#7f8eaa;font-weight:800;font-size:1rem;padding:0}
+
+.axisRow{display:flex;align-items:center;justify-content:center;gap:6px}
+.dial{width:min(230px,100%);height:auto;display:block;flex:0 1 230px;min-width:0}
+.dial .arc{fill:none;stroke:#223049;stroke-width:12}
+.dial .safe{fill:none;stroke:rgba(54,222,136,.28);stroke-width:12}
+.dial .dz{fill:none;stroke:rgba(255,91,91,.4);stroke-width:12}
+.dial .tk{stroke:#cfd8e6;stroke-width:3;stroke-linecap:round}
+.dial .t0{fill:#fff}
+.dial .tx path{stroke:var(--red);stroke-width:3.5;stroke-linecap:round}
+.dial .lb{fill:#6f81a0;font:700 9px "Orbitron",sans-serif;text-anchor:middle}
+.needle{transform-box:view-box;transform-origin:110px 112px;transition:transform 1s cubic-bezier(.34,1.35,.5,1)}
+.needle .nl{stroke:var(--amber);stroke-width:3;stroke-linecap:round}
+.needle .head{fill:var(--amber)}
+.jet{fill:#dfe7f3}
+.jet .win{fill:none;stroke:#2c3d5c;stroke-width:2.5;stroke-linecap:round}
+.jet .eng{fill:#9fb0c8}
+.axisTxt{text-align:center;font-weight:700;font-size:.84rem;margin-top:-2px}
+.axisTxt.danger{color:var(--red)}
+
+.engRow{display:flex;align-items:center;justify-content:center;gap:14px}
+.speedRead{min-width:84px;text-align:center;line-height:1.1}
+.speedRead small{display:block;font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:800}
+.speedRead b{font-family:"Orbitron",sans-serif;font-size:1.55rem;color:var(--amber)}
+.speedRead span{display:block;font-size:.74rem;font-weight:700;color:var(--ink)}
+.gauge{margin-top:10px}
+.gRow{position:relative;display:grid;grid-template-columns:repeat(11,1fr)}
+.gc{height:26px;display:grid;place-items:center;font-family:"Orbitron",sans-serif;font-size:.68rem;font-weight:700;border-right:1px solid rgba(0,0,0,.35);transition:background .4s}
+.gc:first-child,.bc:first-child{border-radius:7px 0 0 7px} .gc:last-child,.bc:last-child{border-radius:0 7px 7px 0;border-right:0}
+.gc.z0{background:#1c2638;color:#7f8ea6}
+.gc.z1{background:rgba(61,142,255,.3);color:#d4e6ff}
+.gc.z2{background:rgba(255,152,56,.32);color:#ffe4c8}
+.bc{height:12px;background:#1c2638;border-right:1px solid rgba(0,0,0,.35);transition:background .4s}
+.bc.ok{background:rgba(54,222,136,.38)}
+.mk{position:absolute;top:-5px;bottom:-5px;width:6px;margin-left:-3px;border-radius:3px;transition:left .6s;z-index:2}
+.mkB{background:var(--pB);box-shadow:0 0 8px var(--pB)}
+.mkO{background:var(--pO);box-shadow:0 0 8px var(--pO)}
+.mkR{background:var(--red);box-shadow:0 0 8px var(--red)}
+.ptr{position:absolute;top:-13px;width:0;height:0;border:7px solid transparent;border-top-color:var(--amber);margin-left:-7px;transition:left .5s;z-index:3}
+.gLeg{display:flex;justify-content:space-between;gap:6px;font-size:.7rem;color:var(--muted);margin:5px 1px;font-weight:600;flex-wrap:wrap}
+.gLeg b{color:var(--ink)}
+.concRow{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
+.cups{display:flex;gap:2px;margin-left:6px}
+.cup{font-size:1.15rem;opacity:.22;filter:grayscale(1);transition:.3s}
+.cup.on{opacity:1;filter:none}
+.rrTok{display:flex;align-items:center;gap:6px;margin-left:8px;font-weight:800;color:var(--led)}
+.rrTok .btn{padding:4px 10px;font-size:.82rem}
+
+/* tray */
+.tray{margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel2);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-height:72px}
+.tray.turn{border-color:var(--led);box-shadow:0 0 0 3px rgba(54,222,136,.12)}
+.tray .tl{font-weight:800;font-size:.92rem;display:flex;align-items:center;gap:6px}
+.myDice{display:flex;gap:9px;align-items:center;min-height:calc(var(--ds) + 8px)}
+.dw{position:relative;cursor:pointer;display:inline-block;transition:transform .15s}
+.dw.sel{transform:translateY(-6px)}
+.dw.sel .die{box-shadow:0 0 0 3px #fff,0 8px 14px rgba(0,0,0,.45)}
+.dw.mark .die{outline:3px dashed var(--amber);outline-offset:3px;opacity:.75}
+.dw .die.roll{animation:roll .65s ease-out}
+@keyframes roll{0%{transform:rotate(-220deg) scale(.3);opacity:0}70%{transform:rotate(14deg) scale(1.12);opacity:1}100%{transform:none}}
+.adjTag{position:absolute;top:-8px;right:-8px;background:#6b4423;color:#fff;border-radius:999px;font-size:.66rem;font-weight:800;padding:1px 5px;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.adj{display:flex;align-items:center;gap:6px;font-weight:700;font-size:.86rem}
+.adj button{width:34px;height:34px;border-radius:10px;border:2px solid var(--line);background:#0d1522;color:var(--ink);font-weight:800;font-size:1.05rem}
+.adj button:disabled{opacity:.35;cursor:default}
+.tray .sp{flex:1}
+.pd{text-align:right}
+.pDice{display:flex;gap:5px;justify-content:flex-end;margin-top:3px;--ds:30px}
+.hint{color:var(--muted);font-weight:600;min-height:2.6em;margin-top:9px;text-align:center;font-size:.92rem;line-height:1.35}
+.hint b{color:var(--ink)}
+.hint .bad,.hint .bad b{color:var(--red)}
+
+/* aside */
+.crew{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:12px;border:2px solid transparent}
+.crew+.crew{margin-top:4px}
+.crew.act{border-color:var(--led);background:rgba(54,222,136,.07)}
+.crew .nm{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.crew .sp{flex:1}
+.badge{padding:2px 9px;border-radius:999px;font-size:.74rem;font-weight:800;color:#fff;white-space:nowrap}
+.badge.r0{background:var(--pB)} .badge.r1{background:var(--pO)}
+.ck{display:flex;gap:9px;align-items:flex-start;padding:4px 0;font-size:.88rem;line-height:1.35}
+.ck .m{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:800;flex:none;background:#26324a;color:var(--muted);font-size:.72rem}
+.ck.ok .m{background:var(--led);color:#05391d}
+.ck b{color:#fff}
+.ckFoot{border-top:1px dashed var(--line);margin-top:6px;padding-top:7px;font-size:.86rem;color:var(--muted)}
+.ckFoot b{color:var(--ink)}
+.chatRow{display:flex;gap:6px}
+.chatRow input{padding:7px 10px;font-size:.92rem}
+.chatRow .btn{padding:6px 12px}
+.log{max-height:260px;overflow:auto;font-size:.86rem;display:flex;flex-direction:column;gap:3px;color:#cdd7e6}
+.log div{padding:3px 0 3px 7px;border-bottom:1px dashed #223049;border-left:3px solid transparent}
+.log div.sys{color:var(--amber);font-weight:800;border-left-color:transparent;padding-left:0}
+.log div.r0{border-left-color:var(--pB)}
+.log div.r1{border-left-color:var(--pO)}
+.log div.chat{font-style:italic;color:#fff}
+
+/* overlay */
+.overlay{position:fixed;inset:0;background:rgba(3,8,16,.62);display:grid;place-items:center;padding:16px;z-index:50}
+.modal{background:var(--panel);border-radius:24px;padding:22px 20px;max-width:560px;width:100%;border:2px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:92vh;overflow:auto}
+.modal h2{margin:0 0 8px;font-weight:800;font-size:1.6rem;text-align:center}
+.modal .rules{font-size:.93rem;line-height:1.5;color:#d3dceb}
+.modal .rules h3{margin:14px 0 4px;color:var(--amber);font-size:1.02rem}
+.modal .rules ul{margin:4px 0;padding-left:20px}
+.modal .rules b{color:#fff}
+.center-t{text-align:center}
+.toast{
+  position:fixed;left:50%;bottom:20px;transform:translate(-50%,40px);opacity:0;background:#f1f5fb;color:#111a28;
+  padding:10px 16px;border-radius:12px;font-weight:700;transition:.25s;z-index:60;max-width:calc(100vw - 32px);text-align:center;pointer-events:none;
+}
+.toast.show{transform:translate(-50%,0);opacity:1}
+
+@media (max-width:1000px){ .layout{grid-template-columns:1fr} }
+@media (max-width:760px){
+  :root{--ds:36px}
+  #game{padding:8px 12px 20px}
+  .top{flex-direction:column}
+  .deck{grid-template-columns:1fr 1fr}
+  .center{grid-column:1/-1;order:-1}
+  .cockpit{padding:9px;border-radius:18px}
+  .tray{position:sticky;bottom:8px;z-index:20;box-shadow:0 -6px 24px rgba(0,0,0,.5);gap:8px 10px;padding:8px 10px;min-height:0}
+  .tray .tl{font-size:.8rem}
+  .pd{display:flex;align-items:center;gap:5px}
+  .pd .small{display:none}
+  .pDice{--ds:22px;margin:0}
+  .pDice .die.hid{font-size:.7rem}
+  header .title{font-size:1.2rem}
+}
+@media (max-width:380px){ :root{--ds:33px} .slots{gap:4px} }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="pl" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></symbol>
+</defs></svg>
+
+<!-- ============ LOBBY ============ -->
+<section id="lobby">
+  <div class="lobby-card">
+    <div id="lobbyMain">
+      <div class="logo"><span class="die r0" style="--ds:34px"><i style="grid-area:1/1"></i><i style="grid-area:2/2"></i><i style="grid-area:3/3"></i></span><svg><use href="#pl"/></svg><span class="die r1" style="--ds:34px"><i style="grid-area:1/1"></i><i style="grid-area:1/3"></i><i style="grid-area:3/1"></i><i style="grid-area:3/3"></i></span></div>
+      <h1><span class="b">SKY</span> <span class="o">TEAM</span></h1>
+      <p class="tag">Hai phi công, tám viên xúc xắc, một lần hạ cánh · hợp tác 2 người</p>
+      <label for="nameInput">Tên của bạn</label>
+      <input id="nameInput" maxlength="16" placeholder="VD: Hoàng" autocomplete="off">
+      <label>Bạn ngồi ghế</label>
+      <div class="seg" id="roleSeg"><button data-r="0" class="r0">Phi công</button><button data-r="1" class="r1">Cơ phó</button></div>
+      <div class="row"><button class="btn blue" id="createBtn">Tạo phòng</button></div>
+      <div class="or">hoặc vào phòng của bạn bè</div>
+      <label for="codeInput">Mã phòng</label>
+      <input id="codeInput" maxlength="5" placeholder="ABCDE" autocomplete="off">
+      <div class="row"><button class="btn green" id="joinBtn">Vào phòng</button></div>
+      <div class="or">hoặc</div>
+      <div class="row"><button class="btn gold" id="botBtn">Bay cùng máy</button></div>
+      <div class="row"><button class="btn ghost" id="rulesBtn0">Xem luật chơi</button></div>
+      <div class="msg" id="lobbyMsg"></div>
+    </div>
+    <div id="lobbyWait" class="waiting hidden">
+      <div class="logo"><svg><use href="#pl"/></svg></div>
+      <h2 style="margin:6px 0 0">Phòng đã tạo!</h2>
+      <p class="tag">Gửi mã này cho đồng đội</p>
+      <div class="code" id="waitCode">-----</div>
+      <div class="link" id="waitLink"></div>
+      <div class="row"><button class="btn green" id="copyBtn">Sao chép link</button></div>
+      <p class="tag" style="margin-top:16px">Đang chờ đồng đội vào buồng lái<span class="dots"></span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GAME ============ -->
+<section id="game" class="hidden">
+  <header>
+    <span class="title"><span class="b">SKY</span> <span class="o">TEAM</span></span>
+    <span class="info" id="roomInfo"></span>
+    <span class="chip" id="roundChip"></span>
+    <span class="chip" id="turnChip"></span>
+    <span class="sp"></span>
+    <button class="btn ghost" id="rulesBtn">Luật</button>
+    <button class="btn ghost" id="restartBtn">Bay lại</button>
+  </header>
+  <div class="layout">
+    <main>
+      <div class="banner" id="banner"></div>
+      <div class="lastMove" id="lastMove"></div>
+      <div class="cockpit" id="cockpit"></div>
+      <div class="tray" id="tray"></div>
+      <div class="hint" id="hint"></div>
+    </main>
+    <aside>
+      <div class="panel">
+        <div class="ptitle">👩‍✈️ Tổ lái</div>
+        <div id="crew"></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">🛬 Điều kiện hạ cánh</div>
+        <div id="checks"></div>
+      </div>
+      <div class="panel" id="chatPanel">
+        <div class="ptitle">💬 Bàn chiến thuật</div>
+        <div class="chatRow"><input id="chatInput" maxlength="140" autocomplete="off"><button class="btn blue" id="chatBtn">Gửi</button></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">📜 Nhật ký bay</div>
+        <div class="log" id="log"></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<div id="overlay" class="overlay hidden"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= RULES / ENGINE ================= */
+// Luật bản cơ bản (YUL Montréal-Trudeau). Vai 0 = Phi công (xanh), vai 1 = Cơ phó (cam).
+const ROLE=["Phi công","Cơ phó"];
+const ROUNDS=7, APT=7, BRK=[2,4,6], REROLL_AT=[1,5];
+const TRAFFIC=[0,0,0,1,2,1,3,2];             // số máy bay ở ô 1..7 của đường tiếp cận (ô 7 = sân bay)
+const altOf = r => (ROUNDS-r)*1000;
+const startOf = r => r%2 ? 0 : 1;            // vòng lẻ Phi công đi trước
+const SP={
+  axis0:{r:0,t:"axis",mand:1}, axis1:{r:1,t:"axis",mand:1},
+  eng0:{r:0,t:"eng",mand:1},   eng1:{r:1,t:"eng",mand:1},
+  radio0:{r:0,t:"radio"}, radio1:{r:1,t:"radio"}, radio2:{r:1,t:"radio"},
+  gear0:{r:0,t:"gear",i:0,vals:[1,2]}, gear1:{r:0,t:"gear",i:1,vals:[3,4]}, gear2:{r:0,t:"gear",i:2,vals:[5,6]},
+  flap0:{r:1,t:"flap",i:0,vals:[1,2]}, flap1:{r:1,t:"flap",i:1,vals:[2,3]}, flap2:{r:1,t:"flap",i:2,vals:[4,5]}, flap3:{r:1,t:"flap",i:3,vals:[5,6]},
+  brake0:{r:0,t:"brake",i:0,vals:[2]}, brake1:{r:0,t:"brake",i:1,vals:[4]}, brake2:{r:0,t:"brake",i:2,vals:[6]},
+  conc0:{r:-1,t:"conc"}, conc1:{r:-1,t:"conc"}, conc2:{r:-1,t:"conc"}
+};
+const SIDS=Object.keys(SP);
+const sum = a => a.reduce((x,y)=>x+y,0);
+function rnd(n){ const a=new Uint32Array(1); crypto.getRandomValues(a); return a[0]%n; }
+
+function spaceName(sid){
+  const s=SP[sid];
+  return {axis:"Trục",eng:"Động cơ",radio:"Radio",conc:"Tập trung",
+          gear:"Càng đáp "+(s.vals||[]).join("-"),flap:"Cánh tà "+(s.vals||[]).join("-"),brake:"Phanh "+(s.vals||[""])[0]}[s.t];
+}
+const axisTxt = x => x===0 ? "thăng bằng" : `lệch ${Math.abs(x)} về ${ROLE[x<0?0:1]}`;
+const arrOf = (B,t) => t==="gear"?B.gear : t==="flap"?B.flaps : B.brakes;
+const LOSS={
+  spin:"Máy bay nghiêng quá mức: trục chạm dấu ✖ và rơi vào vòng xoáy.",
+  level:"Máy bay chạm đất khi thân còn nghiêng (trục chưa thăng bằng).",
+  brake:"Tốc độ hạ cánh không nhỏ hơn lực phanh: máy bay lao khỏi đường băng.",
+  collision:"Va chạm với máy bay khác trên đường tiếp cận!",
+  overshoot:"Bay vượt quá sân bay!",
+  short:"Đã hết độ cao mà chưa tới sân bay: máy bay rơi trước đường băng.",
+  landing:"Hạ cánh không đạt đủ điều kiện."
+};
+
+function newBoard(){
+  return {round:1,axis:0,blue:4,orange:8,brake:0,pos:1,planes:TRAFFIC.slice(),gear:[0,0,0],flaps:[0,0,0,0],brakes:[0,0,0],
+          coffee:0,rerolls:0,slots:{},speed:null};
+}
+function cloneB(B){
+  return {...B,planes:B.planes.slice(),gear:B.gear.slice(),flaps:B.flaps.slice(),brakes:B.brakes.slice(),slots:{...B.slots}};
+}
+function mandLeft(B,r){ return (B.slots["axis"+r]?0:1)+(B.slots["eng"+r]?0:1); }
+// n = số xúc xắc người đặt còn trên tay (kể cả viên đang đặt)
+function placeErr(B,r,sid,v,n){
+  if(!SIDS.includes(sid)) return "Ô không hợp lệ.";
+  const s=SP[sid];
+  if(B.slots[sid]) return "Ô này đã có xúc xắc.";
+  if(s.r>=0&&s.r!==r) return `Ô này dành cho ${ROLE[s.r]}.`;
+  if(!(v>=1&&v<=6)) return "Giá trị xúc xắc không hợp lệ.";
+  if(s.vals&&!s.vals.includes(v)) return `Ô này chỉ nhận giá trị ${s.vals.join(" hoặc ")}.`;
+  if((s.t==="flap"||s.t==="brake")&&s.i>0){
+    const a=arrOf(B,s.t);
+    if(!a[s.i]&&!a[s.i-1]) return s.t==="flap" ? "Phải hạ cánh tà theo thứ tự từ trên xuống." : "Phải kéo phanh theo thứ tự 2 → 4 → 6.";
+  }
+  if(!s.mand&&n<=mandLeft(B,r)) return "Bạn phải giữ xúc xắc cho Trục và Động cơ (bắt buộc mỗi vòng).";
+  return null;
+}
+function advOf(B,s){ return s<=B.blue?0 : s<=B.orange?1 : 2; }
+// Đặt xúc xắc và áp dụng hiệu ứng ngay. Trả về {t: mô tả, loss: lý do thua | null}
+function resolve(B,r,sid,v){
+  const s=SP[sid]; B.slots[sid]={r,v};
+  let t="", loss=null;
+  if(s.t==="axis"||s.t==="eng"){
+    const a=B.slots[s.t+"0"], b=B.slots[s.t+"1"];
+    if(!a||!b) return {t:"chờ đồng đội đặt viên thứ hai",loss};
+    if(s.t==="axis"){
+      const d=b.v-a.v; B.axis+=d;
+      t = d ? `trục nghiêng ${Math.abs(d)} vạch về phía ${ROLE[d<0?0:1]} → ${axisTxt(B.axis)}` : `hai viên bằng nhau, trục giữ nguyên (${axisTxt(B.axis)})`;
+      if(Math.abs(B.axis)>=3) loss="spin";
+      else if(B.round===ROUNDS&&B.axis!==0) loss="level";
+    } else {
+      const sp=a.v+b.v; B.speed=sp;
+      if(B.round===ROUNDS){
+        t=`tốc độ hạ cánh ${sp}, lực phanh ${B.brake>=2?B.brake:"chưa có"}`;
+        if(!(B.brake>=2&&sp<=B.brake)) loss="brake";
+      } else {
+        const n=advOf(B,sp);
+        for(let i=0;i<n;i++){
+          if(B.planes[B.pos]>0){ loss="collision"; break; }
+          if(B.pos>=APT){ loss="overshoot"; break; }
+          B.pos++;
+        }
+        t=`tốc độ ${sp} → ${n?`tiến ${n} ô`:"giữ nguyên vị trí"}`;
+      }
+    }
+  } else if(s.t==="radio"){
+    const x=B.pos+v-1;
+    if(x<=APT&&B.planes[x]>0){ B.planes[x]--; t=`liên lạc tháp điều khiển, dẹp 1 máy bay ở ô ${v===1?"hiện tại":"thứ "+v}`; }
+    else t="không có máy bay ở ô đó (không tác dụng)";
+  } else if(s.t==="gear"){
+    if(!B.gear[s.i]){ B.gear[s.i]=1; B.blue++; t=`hạ càng đáp, vạch xanh dời lên ${B.blue}|${B.blue+1}`; }
+    else t="càng này đã hạ (không tác dụng)";
+  } else if(s.t==="flap"){
+    if(!B.flaps[s.i]){ B.flaps[s.i]=1; B.orange++; t=`hạ cánh tà, vạch cam dời lên ${B.orange}|${B.orange+1}`; }
+    else t="cánh tà này đã hạ (không tác dụng)";
+  } else if(s.t==="brake"){
+    if(!B.brakes[s.i]){ B.brakes[s.i]=1; B.brake=BRK[s.i]; t=`kéo phanh, lực phanh ${B.brake}`; }
+    else t="phanh này đã kéo (không tác dụng)";
+  } else {
+    if(B.coffee<3){ B.coffee++; t=`pha cà phê (☕ ${B.coffee}/3)`; } else t="đã đủ 3 cà phê (không tác dụng)";
+  }
+  return {t,loss};
+}
+function checks(B){
+  return { A:sum(B.planes)===0, B:sum(B.gear)===3&&sum(B.flaps)===4, C:B.axis===0, D:B.speed!=null&&B.brake>=2&&B.speed<=B.brake };
+}
+
+/* ---------- trạng thái ván ---------- */
+// names, seat theo chỉ số người chơi (0 = chủ phòng, 1 = khách/máy); seat[p] = vai của người p
+const nameR = (st,r) => st.names[st.seat.indexOf(r)];
+function newMatch(names, seat, bot){
+  const st={names, seat, bot:!!bot, log:[], moveNo:0, flights:0};
+  resetFlight(st); return st;
+}
+function resetFlight(st){
+  st.B=newBoard(); st.dice=[[],[]]; st.seq=0; st.placed=0; st.rr=null; st.result=null; st.last=null; st.flights++;
+  st.log.push({sys:1,t:`✈ Chuyến bay ${st.flights}: ${nameR(st,0)} (Phi công) & ${nameR(st,1)} (Cơ phó) hạ cánh xuống YUL Montréal-Trudeau.`});
+  beginRound(st); st.moveNo++;
+}
+function beginRound(st){
+  const B=st.B;
+  st.phase="brief"; st.ready=[0,0]; st.dice=[[],[]]; st.placed=0; st.rr=null; B.slots={}; B.speed=null;
+  st.turn=startOf(B.round);
+  let t=`— Vòng ${B.round}/${ROUNDS} · ${altOf(B.round)} ft —`;
+  if(REROLL_AT.includes(B.round)){ B.rerolls++; t+=" Nhận 1 lượt tung lại ⟳."; }
+  if(B.round===ROUNDS) t+=" VÒNG HẠ CÁNH!";
+  st.log.push({sys:1,t});
+  if(st.bot) st.ready[st.seat[1]]=1;
+}
+function rollDice(st){
+  for(const r of [0,1]) st.dice[r]=Array.from({length:4},()=>({id:++st.seq,v:1+rnd(6)}));
+  st.phase="place";
+  st.log.push({t:`🎲 Hai phi công tung xúc xắc. ${nameR(st,st.turn)} (${ROLE[st.turn]}) đặt trước. Giữ im lặng!`});
+}
+function finish(st,win,reason){
+  st.phase="end"; st.result={win,reason};
+  st.log.push({sys:1,t: win ? "🎉 Hạ cánh an toàn! Hành khách vỗ tay rào rào." : "💥 "+LOSS[reason]});
+}
+function endRound(st){
+  const B=st.B;
+  if(B.round===ROUNDS){ const c=checks(B); finish(st, c.A&&c.B&&c.C&&c.D, c.A&&c.B&&c.C&&c.D?"win":"landing"); return; }
+  B.round++;
+  st.log.push({t:`Hết vòng, máy bay hạ xuống ${altOf(B.round)} ft.`});
+  if(B.round===ROUNDS&&B.pos!==APT){ B.slots={}; B.speed=null; finish(st,false,"short"); return; }
+  if(B.round===ROUNDS) st.log.push({t:"Tới sân bay đúng lúc chuẩn bị chạm đất!"});
+  beginRound(st);
+}
+
+function applyAction(st,p,a){
+  if(!a||typeof a!=="object") return "Hành động không hợp lệ.";
+  const r=st.seat[p], B=st.B;
+  switch(a.k){
+  case "chat": {
+    if(st.phase==="place") return "Đang đặt xúc xắc: phải giữ im lặng!";
+    const t=String(a.t||"").trim().slice(0,140); if(!t) return null;
+    st.log.push({chat:1,r,t:`${nameR(st,r)}: ${t}`}); st.moveNo++; return null;
+  }
+  case "rematch": {
+    if(st.phase!=="end") return "Chuyến bay chưa kết thúc.";
+    if(a.swap) st.seat=[st.seat[1],st.seat[0]];
+    resetFlight(st); return null;
+  }
+  case "restart": {
+    st.log.push({sys:1,t:`${nameR(st,r)} cho bay lại từ đầu.`});
+    resetFlight(st); return null;
+  }
+  case "ready": {
+    if(st.phase!=="brief") return null;
+    st.ready[r]=1;
+    if(st.ready[0]&&st.ready[1]) rollDice(st);
+    st.moveNo++; return null;
+  }
+  case "useReroll": {
+    if(st.phase!=="place") return "Chỉ dùng được khi đang đặt xúc xắc.";
+    if(st.rr) return "Đang tung lại rồi.";
+    if(B.rerolls<=0) return "Không còn lượt tung lại.";
+    B.rerolls--;
+    st.rr={done:[st.dice[0].length?0:1, st.dice[1].length?0:1]};
+    st.log.push({t:`⟳ ${nameR(st,r)} dùng 1 lượt tung lại: mỗi người được tung lại các xúc xắc tuỳ chọn một lần.`});
+    if(st.rr.done[0]&&st.rr.done[1]) st.rr=null;
+    st.moveNo++; return null;
+  }
+  case "rerollPick": {
+    if(!st.rr||st.rr.done[r]) return null;
+    const ids=Array.isArray(a.ids)?a.ids:[]; let n=0;
+    for(const d of st.dice[r]) if(ids.includes(d.id)){ d.v=1+rnd(6); d.id=++st.seq; n++; }
+    st.rr.done[r]=1;
+    st.log.push({r,t:`${nameR(st,r)} tung lại ${n} viên.`});
+    if(st.rr.done[0]&&st.rr.done[1]) st.rr=null;
+    st.moveNo++; return null;
+  }
+  case "place": {
+    if(st.phase!=="place") return "Chưa tới lúc đặt xúc xắc.";
+    if(st.rr) return "Đang chờ tung lại xúc xắc.";
+    if(st.turn!==r) return "Chưa tới lượt bạn.";
+    const my=st.dice[r], d=my.find(x=>x.id===a.die);
+    if(!d) return "Không có xúc xắc đó.";
+    const adj=a.adj|0;
+    if(Math.abs(adj)>B.coffee) return "Không đủ cà phê.";
+    const v=d.v+adj;
+    if(v<1||v>6) return "Cà phê không chỉnh xúc xắc ra ngoài 1–6 được.";
+    const e=placeErr(B,r,a.sid,v,my.length); if(e) return e;
+    B.coffee-=Math.abs(adj);
+    my.splice(my.indexOf(d),1);
+    const res=resolve(B,r,a.sid,v);
+    const txt=`${nameR(st,r)} đặt ${v}${adj?` (${d.v}${adj>0?"+":"−"}${Math.abs(adj)}☕)`:""} vào ${spaceName(a.sid)}: ${res.t}.`;
+    st.log.push({r,t:txt}); st.last={r,sid:a.sid,v,text:txt};
+    st.placed++; st.moveNo++;
+    if(res.loss){ finish(st,false,res.loss); return null; }
+    if(st.placed>=8) endRound(st);
+    else if(st.dice[1-r].length) st.turn=1-r;
+    return null;
+  }
+  }
+  return "Hành động không hợp lệ.";
+}
+
+function viewFor(st,p){
+  const r=st.seat[p];
+  return {
+    me:r, names:[nameR(st,0),nameR(st,1)], bot:st.bot, phase:st.phase, turn:st.turn, ready:st.ready,
+    rr:st.rr?{done:st.rr.done}:null, B:st.B, my:st.dice[r], other:st.dice[1-r].length, placed:st.placed,
+    log:st.log.slice(-80), last:st.last, moveNo:st.moveNo, result:st.result, flights:st.flights
+  };
+}
+
+/* ================= BOT ================= */
+// Máy chỉ nhìn thấy xúc xắc của mình và bảng điều khiển chung (không nhìn trộm xúc xắc đồng đội).
+const COFFEE_COST=9;
+function axisU(B){
+  const x=Math.abs(B.axis);
+  if(x>=3) return -1000;
+  if(B.round===ROUNDS) return x?-1000:60;
+  return 36-13*x-(B.round===ROUNDS-1?12*x:0);
+}
+function engU(B){
+  if(B.round===ROUNDS) return 60;
+  const mv=ROUNDS-1-B.round, d=APT-B.pos;          // số vòng còn được tiến (sau vòng này), khoảng cách tới sân bay
+  if(d>2*mv) return -600;
+  const slack=mv-d;
+  let u=40-30*Math.max(0,-slack)+6*Math.min(slack,2)-5*Math.max(0,slack-2);
+  if(d===0&&mv>0) u-=(B.blue<6?7:3)*mv;             // tới sớm: phải bay vòng chờ
+  if(d>0&&B.planes[B.pos]>0) u-=6*B.planes[B.pos];
+  return u;
+}
+// kỳ vọng của giá trị tốt nhất khi đồng đội có k viên ngẫu nhiên
+function expMax(us,k){
+  us=us.slice().sort((a,b)=>b-a); let e=0;
+  for(let j=0;j<6;j++) e+=us[j]*(Math.pow((6-j)/6,k)-Math.pow((5-j)/6,k));
+  return e;
+}
+function moveRounds(B){ return ROUNDS-1-B.round+(B.slots.eng0&&B.slots.eng1?0:1); }
+function planesAhead(B){ let n=0; for(let i=B.pos;i<=APT;i++) n+=B.planes[i]; return n; }
+function util(B,r,sid,v,k){
+  const s=SP[sid], R=ROUNDS+1-B.round, engDone=!!(B.slots.eng0&&B.slots.eng1);
+  switch(s.t){
+    case "axis": case "eng": {
+      const os=s.t+(1-r), f=s.t==="axis"?axisU:engU;
+      const B2=cloneB(B), res=resolve(B2,r,sid,v);
+      if(B.slots[os]) return res.loss?-1000:f(B2);
+      const us=[];
+      for(let u=1;u<=6;u++){ const B3=cloneB(B2), q=resolve(B3,1-r,os,u); us.push(q.loss?-1000:f(B3)); }
+      return expMax(us,Math.max(1,k))*0.9-4;
+    }
+    case "radio": {
+      const x=B.pos+v-1;
+      if(x>APT||!B.planes[x]) return -8;
+      if(B.round===ROUNDS) return 1000;                // vòng hạ cánh: máy bay còn sót là thua chắc
+      const press=Math.min(1.5,planesAhead(B)/Math.max(1,R*1.3));
+      return (v===1?72 : v===2?55 : 46-4*(v-1))+32*press;
+    }
+    case "gear": {
+      if(B.gear[s.i]) return -6;
+      if(B.round===ROUNDS) return 1000;
+      return 18+62*Math.min(1.5,(3-sum(B.gear))/(R*0.85));
+    }
+    case "flap": {
+      if(B.flaps[s.i]) return -6;
+      if(B.round===ROUNDS) return 1000;
+      let u=16+62*Math.min(1.5,(4-sum(B.flaps))/(R*0.85));
+      const fast=APT-B.pos-moveRounds(B);              // số lần còn phải tiến 2 ô
+      if(fast>0) u-=s.i===0?12:28;
+      else if(fast===0&&s.i>=2&&APT-B.pos>=2) u-=10;
+      return u;
+    }
+    case "brake": {
+      if(B.brakes[s.i]) return -6;
+      if(B.round===ROUNDS) return engDone?-6:80-s.i*10;
+      return 12+30*(3-sum(B.brakes))/R+(B.round>=4?12:0)+(s.i===1&&B.round>=4?15:0);
+    }
+    default: return B.coffee<3?(B.round<ROUNDS?20:6):-4;
+  }
+}
+// Giá trị giữ viên v cho ô bắt buộc khi đồng đội chưa đặt: trung bình giữa "mình đặt trước" và "mình đáp lại" (có tính cà phê)
+function keepVal(B,r,sid,v,k){
+  const os=SP[sid].t+(1-r);
+  if(B.slots[os]){
+    let b=-1000;
+    for(let a=-B.coffee;a<=B.coffee;a++){ const w=v+a; if(w<1||w>6) continue; b=Math.max(b,util(B,r,sid,w,k)-COFFEE_COST*Math.abs(a)); }
+    return b;
+  }
+  const f=SP[sid].t==="axis"?axisU:engU;
+  let tot=0;
+  for(let u=1;u<=6;u++){
+    const B1=cloneB(B); resolve(B1,1-r,os,u);
+    let b=-1000;
+    for(let a=-B.coffee;a<=B.coffee;a++){
+      const w=v+a; if(w<1||w>6) continue;
+      const B2=cloneB(B1), q=resolve(B2,r,sid,w);
+      b=Math.max(b,(q.loss?-1000:f(B2))-COFFEE_COST*Math.abs(a));
+    }
+    tot+=b;
+  }
+  return 0.5*util(B,r,sid,v,k)+0.5*tot/6;
+}
+// giá trị kế hoạch cho các viên còn lại: ưu tiên giữ viên hợp cho Trục/Động cơ
+function future(B,r,rest,k){
+  if(!rest.length) return 0;
+  const mand=["axis"+r,"eng"+r].filter(s=>!B.slots[s]);
+  const opt=[0];
+  for(let v=1;v<=6;v++){
+    let b=0;
+    for(const sid of SIDS){ if(SP[sid].mand||placeErr(B,r,sid,v,99)) continue; b=Math.max(b,util(B,r,sid,v,k)); }
+    opt[v]=b;
+  }
+  const mu=mand.map(sid=>rest.map(d=>keepVal(B,r,sid,d.v,k)));
+  let best=-Infinity;
+  const rec=(j,used,acc)=>{
+    if(j===mand.length){ let o=0; rest.forEach((d,i)=>{ if(!used.has(i)) o+=opt[d.v]; }); best=Math.max(best,acc+0.4*o); return; }
+    for(let i=0;i<rest.length;i++){ if(used.has(i)) continue; used.add(i); rec(j+1,used,acc+0.8*mu[j][i]); used.delete(i); }
+  };
+  rec(0,new Set(),0);
+  return best===-Infinity?-1e4:best;
+}
+// Chọn các viên nên tung lại: thử mọi tập con, ước lượng bằng vài lần tung giả lập
+function rerollChoice(st,r,S){
+  const B=st.B, my=st.dice[r], k=st.dice[1-r].length, n=my.length;
+  const base=future(B,r,my,k);
+  let best={ev:base,mask:0};
+  for(let mask=1;mask<(1<<n);mask++){
+    let tot=0;
+    for(let s=0;s<S;s++) tot+=future(B,r,my.map((d,i)=>mask>>i&1?{id:d.id,v:1+Math.floor(Math.random()*6)}:d),k);
+    if(tot/S>best.ev+2) best={ev:tot/S,mask};
+  }
+  return {ids:my.filter((d,i)=>best.mask>>i&1).map(d=>d.id), gain:best.ev-base, base};
+}
+function botAct(st,r){
+  const B=st.B, my=st.dice[r], k=st.dice[1-r].length;
+  let best=null;
+  for(const d of my) for(let adj=-B.coffee;adj<=B.coffee;adj++){
+    const v=d.v+adj; if(v<1||v>6) continue;
+    for(const sid of SIDS){
+      if(placeErr(B,r,sid,v,my.length)) continue;
+      const B2=cloneB(B); B2.coffee-=Math.abs(adj);
+      let sc=util(B2,r,sid,v,k)-COFFEE_COST*Math.abs(adj);
+      if(sc>-500){ const B3=cloneB(B2); resolve(B3,r,sid,v); sc+=future(B3,r,my.filter(x=>x!==d),k); }
+      sc+=Math.random()*0.5;
+      if(!best||sc>best.sc) best={sc,die:d.id,sid,adj};
+    }
+  }
+  if(B.rerolls>0&&!st.rr&&my.length>=2&&(my.length>=3||best.sc<0)){
+    const c=rerollChoice(st,r,8);
+    const thr=B.rerolls>1||B.round>=5?18:28;
+    if(c.ids.length&&c.gain>thr) return {k:"useReroll"};
+  }
+  return {k:"place",die:best.die,sid:best.sid,adj:best.adj};
+}
+function botRerollPick(st,r){
+  return {k:"rerollPick",ids:st.dice[r].length?rerollChoice(st,r,12).ids:[]};
+}
+let botTimer=null, botKey="";
+function maybeBot(){
+  if(!state||!state.bot) return;
+  const st=state, br=st.seat[1], key=`${st.moveNo}|${st.phase}`;
+  if(key===botKey) return;
+  botKey=key; clearTimeout(botTimer);
+  if(st.phase!=="place") return;
+  if(st.rr&&!st.rr.done[br]){
+    botTimer=setTimeout(()=>{ if(!state.rr||state.rr.done[br]) return; applyAction(state,1,botRerollPick(state,br)); broadcast(); }, 800);
+  } else if(!st.rr&&st.turn===br){
+    botTimer=setTimeout(()=>{
+      if(state.phase!=="place"||state.rr||state.turn!==br) return;
+      const err=applyAction(state,1,botAct(state,br));
+      if(err) console.warn("bot:",err);
+      broadcast();
+    }, 950+Math.random()*700);
+  }
+}
+
+/* ================= NETWORK ================= */
+const PREFIX="skyteam-vh-";
+let peer=null, conn=null, guestConn=null, isHost=false, myName="", guestName="", roomCode="", state=null, view=null, joinTimer=null;
+let rolePref=0;
+
+const $ = id => document.getElementById(id);
+function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove("show"),2600); }
+function lobbyMsg(t){ $("lobbyMsg").textContent=t||""; }
+function genCode(){ const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s=""; const r=new Uint32Array(5); crypto.getRandomValues(r); for(const x of r) s+=A[x%A.length]; return s; }
+function roomLink(){ return location.origin+location.pathname+"?room="+roomCode; }
+function getName(){
+  const n=$("nameInput").value.trim();
+  if(!n){ lobbyMsg("Nhập tên trước đã nhé ✈"); $("nameInput").focus(); return null; }
+  try{ localStorage.setItem("skyteam-name",n); }catch(e){}
+  return n;
+}
+function lockLobby(b){ $("createBtn").disabled=b; $("joinBtn").disabled=b; $("botBtn").disabled=b; }
+
+function playBot(){
+  const n=getName(); if(!n) return;
+  myName=n; isHost=true; roomCode="";
+  state=newMatch([myName,"Máy 🤖"],[rolePref,1-rolePref],true);
+  startGameUI(); broadcast();
+}
+function createRoom(){
+  const n=getName(); if(!n) return;
+  if(typeof Peer==="undefined"){ lobbyMsg("Không tải được thư viện kết nối, kiểm tra mạng."); return; }
+  myName=n; isHost=true; lockLobby(true); lobbyMsg("");
+  roomCode=genCode();
+  peer=new Peer(PREFIX+roomCode);
+  peer.on("open",()=>{
+    $("lobbyMain").classList.add("hidden"); $("lobbyWait").classList.remove("hidden");
+    $("waitCode").textContent=roomCode; $("waitLink").textContent=roomLink();
+    history.replaceState(null,"","?room="+roomCode+"&host=1");
+  });
+  peer.on("connection", onGuestConn);
+  peer.on("disconnected",()=>{ if(!peer.destroyed) peer.reconnect(); });
+  peer.on("error",e=>{
+    if(e.type==="unavailable-id"){ peer.destroy(); isHost=false; createRoom(); return; }
+    if(e.type==="peer-unavailable") return;
+    console.warn(e); toast("Lỗi kết nối: "+e.type); lockLobby(false);
+  });
+}
+function onGuestConn(c){
+  c.on("data", msg=>{
+    if(!msg||typeof msg!=="object") return;
+    if(msg.t==="hello"){
+      if(guestConn && guestConn!==c && guestConn.open){ c.send({t:"full"}); setTimeout(()=>c.close(),300); return; }
+      guestConn=c; guestName=String(msg.name||"Khách").slice(0,16);
+      if(!state){ state=newMatch([myName,guestName],[rolePref,1-rolePref]); startGameUI(); }
+      else { state.names[1]=guestName; state.log.push({t:`${guestName} đã vào lại buồng lái.`}); state.moveNo++; }
+      broadcast();
+    } else if(msg.t==="act" && c===guestConn){
+      const err=applyAction(state,1,msg.a||{});
+      if(err) c.send({t:"err",msg:err});
+      broadcast();
+    }
+  });
+  c.on("close",()=>{ if(c===guestConn){ guestConn=null; if(state){ state.log.push({t:`${guestName} mất kết nối…`}); state.moveNo++; broadcast(); } } });
+}
+function broadcast(){
+  onView(viewFor(state,0));
+  if(guestConn && guestConn.open) guestConn.send({t:"state", view:viewFor(state,1)});
+  maybeBot();
+}
+function joinRoom(){
+  const n=getName(); if(!n) return;
+  const code=$("codeInput").value.trim().toUpperCase();
+  if(code.length!==5){ lobbyMsg("Mã phòng gồm 5 ký tự."); return; }
+  if(typeof Peer==="undefined"){ lobbyMsg("Không tải được thư viện kết nối, kiểm tra mạng."); return; }
+  myName=n; roomCode=code; isHost=false; lockLobby(true); lobbyMsg("Đang kết nối…");
+  $("lobbyMsg").style.color="var(--muted)";
+  if(peer) peer.destroy();
+  peer=new Peer();
+  peer.on("open",()=>connectToHost());
+  peer.on("error",e=>{
+    $("lobbyMsg").style.color="";
+    if(e.type==="peer-unavailable"){ clearTimeout(joinTimer); if(!view){ lobbyMsg("Không tìm thấy phòng "+roomCode+". Kiểm tra lại mã."); lockLobby(false); } else showDisconnected(); }
+    else { console.warn(e); lobbyMsg("Lỗi kết nối: "+e.type); lockLobby(false); }
+  });
+  peer.on("disconnected",()=>{ if(!peer.destroyed) peer.reconnect(); });
+}
+function connectToHost(){
+  conn=peer.connect(PREFIX+roomCode,{reliable:true});
+  clearTimeout(joinTimer);
+  joinTimer=setTimeout(()=>{ if(!view){ lobbyMsg("Kết nối quá lâu. Chủ phòng còn mở tab không?"); lockLobby(false); } },15000);
+  conn.on("open",()=>{ conn.send({t:"hello",name:myName}); });
+  conn.on("data",msg=>{
+    if(!msg) return;
+    if(msg.t==="state"){ clearTimeout(joinTimer); if($("game").classList.contains("hidden")) startGameUI(); if(overlayId==="dc") closeOverlay(); onView(msg.view); }
+    else if(msg.t==="err") toast(msg.msg);
+    else if(msg.t==="full"){ lobbyMsg("Phòng đã đủ 2 người."); lockLobby(false); }
+  });
+  conn.on("close",()=>{ if(view) showDisconnected(); });
+}
+function showDisconnected(){
+  openOverlay(`<h2>Mất kết nối</h2><p class="tag center-t">Không liên lạc được với chủ phòng.</p>
+    <div class="row"><button class="btn green" id="rejoinBtn">Kết nối lại</button></div>`, "dc");
+  $("rejoinBtn").onclick=()=>{ $("rejoinBtn").disabled=true; $("rejoinBtn").textContent="Đang thử…"; connectToHost(); };
+}
+function sendAction(a){
+  if(isHost){ const err=applyAction(state,0,a); if(err) toast(err); broadcast(); }
+  else if(conn && conn.open) conn.send({t:"act",a});
+  else toast("Chưa kết nối với chủ phòng.");
+}
+
+/* ================= UI ================= */
+let overlayId=null;
+function openOverlay(html,id){ $("modal").innerHTML=html; $("overlay").classList.remove("hidden"); overlayId=id; }
+function closeOverlay(){ $("overlay").classList.add("hidden"); overlayId=null; }
+$("overlay").addEventListener("click",e=>{ if(e.target.id==="overlay" && ["rules","confirm","restart","end"].includes(overlayId)) closeOverlay(); });
+
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const PIPS={1:[[2,2]],2:[[1,3],[3,1]],3:[[1,3],[2,2],[3,1]],4:[[1,1],[1,3],[3,1],[3,3]],5:[[1,1],[1,3],[2,2],[3,1],[3,3]],6:[[1,1],[1,3],[2,1],[2,3],[3,1],[3,3]]};
+const dieHTML = (v,r,c="") => `<span class="die r${r} ${c}">${PIPS[v].map(([a,b])=>`<i style="grid-area:${a}/${b}"></i>`).join("")}</span>`;
+const hidDie = r => `<span class="die hid r${r}">?</span>`;
+const planeSvg = cls => `<svg class="${cls}"><use href="#pl"/></svg>`;
+
+let sel=null, adj=0, hov=null, rrSel=new Set(), seen=new Set();
+function myTurn(){ return !!view&&view.phase==="place"&&!view.rr&&view.turn===view.me; }
+function selDie(){ return sel==null?null:view.my.find(d=>d.id===sel)||null; }
+function selVal(){ const d=selDie(); return d?d.v+adj:null; }
+
+function startGameUI(){
+  $("lobby").classList.add("hidden"); $("game").classList.remove("hidden");
+  $("roomInfo").innerHTML = roomCode ? `Phòng <b>${roomCode}</b>` : "Bay cùng máy";
+  if(!isHost && roomCode) history.replaceState(null,"","?room="+roomCode);
+  buildCockpit();
+}
+
+function dialSVG(){
+  const cx=110, cy=112, R=90, P=a=>[cx+R*Math.sin(a*Math.PI/180), cy-R*Math.cos(a*Math.PI/180)];
+  const arc=(a1,a2,cls)=>{ const [x1,y1]=P(a1),[x2,y2]=P(a2); return `<path class="${cls}" d="M${x1.toFixed(1)} ${y1.toFixed(1)}A${R} ${R} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}"/>`; };
+  let tk="";
+  for(let k=-3;k<=3;k++){
+    const a=k*25*Math.PI/180, s=Math.sin(a), c=Math.cos(a);
+    const xi=cx+(R-16)*s, yi=cy-(R-16)*c, xo=cx+(R-6)*s, yo=cy-(R-6)*c;
+    if(Math.abs(k)===3) tk+=`<g class="tx" transform="translate(${(cx+(R-1)*s).toFixed(1)} ${(cy-(R-1)*c).toFixed(1)})"><path d="M-6 -6L6 6M6 -6L-6 6"/></g>`;
+    else if(k===0) tk+=`<path class="t0" d="M${cx-7} ${cy-R-9}L${cx+7} ${cy-R-9}L${cx} ${cy-R+3}Z"/>`;
+    else tk+=`<line class="tk" x1="${xi.toFixed(1)}" y1="${yi.toFixed(1)}" x2="${xo.toFixed(1)}" y2="${yo.toFixed(1)}"/>`;
+    if(k&&Math.abs(k)<3) tk+=`<text class="lb" x="${(cx+(R-26)*s).toFixed(1)}" y="${(cy-(R-26)*c+3).toFixed(1)}">${Math.abs(k)}</text>`;
+  }
+  return `<svg class="dial" viewBox="0 0 220 122" aria-label="Trục máy bay">
+    ${arc(-90,90,"arc")}${arc(-62,62,"safe")}${arc(-90,-63,"dz")}${arc(63,90,"dz")}${tk}
+    <g class="needle" id="needle">
+      <line class="nl" x1="${cx}" y1="${cy-30}" x2="${cx}" y2="${cy-R+18}"/>
+      <path class="head" d="M${cx-6} ${cy-R+22}L${cx} ${cy-R+11}L${cx+6} ${cy-R+22}Z"/>
+      <g class="jet">
+        <path d="M${cx-3} ${cy-16}L${cx} ${cy-36}L${cx+3} ${cy-16}Z"/>
+        <rect x="${cx-62}" y="${cy-8}" width="124" height="7" rx="3.5"/>
+        <circle class="eng" cx="${cx-30}" cy="${cy+2}" r="5.5"/><circle class="eng" cx="${cx+30}" cy="${cy+2}" r="5.5"/>
+        <circle cx="${cx}" cy="${cy-5}" r="14"/>
+        <path class="win" d="M${cx-8} ${cy-9}Q${cx} ${cy-15} ${cx+8} ${cy-9}"/>
+      </g>
+    </g>
+  </svg>`;
+}
+
+function buildCockpit(){
+  const sl=sid=>`<div class="slot ${SP[sid].r<0?"rx":"r"+SP[sid].r}" id="s_${sid}" data-sid="${sid}"></div>`;
+  const sw=sid=>`<div class="sw">${sl(sid)}<div class="led" id="l_${sid}"></div></div>`;
+  const rng=(a,b)=>Array.from({length:b-a+1},(_,i)=>a+i);
+  $("cockpit").innerHTML=`
+  <div class="top">
+    <div class="inst apprBox">
+      <div class="ih"><span>Đường tiếp cận</span><span>YUL Montréal-Trudeau</span></div>
+      <div class="appr" id="appr">
+        ${rng(1,APT).map(i=>`<div class="ac ${i===APT?"apt":""}" id="ac${i}"><span class="rel" id="acr${i}"></span>${i===APT?'<span class="aptl">YUL</span>':""}<span id="tf${i}" style="display:contents"></span></div>`).join("")}
+        <div class="own" id="own">${planeSvg("")}</div>
+      </div>
+    </div>
+    <div class="inst altBox">
+      <div class="ih"><span>Độ cao (ft)</span><span><span style="color:var(--pB)">●</span> / <span style="color:var(--pO)">●</span> đi trước</span></div>
+      <div class="alt">
+        ${rng(1,ROUNDS).map(r=>`<div class="al" id="al${r}">${r===ROUNDS?'<span class="land">🛬</span>':`<b>${altOf(r)}</b>`}<span class="st r${startOf(r)}"></span><span class="rr hidden" id="alr${r}">⟳</span></div>`).join("")}
+      </div>
+    </div>
+  </div>
+  <div class="deck">
+    <div class="col c0">
+      <div class="colh">Phi công<small id="pn0"></small></div>
+      <div class="grp"><div class="gh">Radio</div><div class="slots">${sl("radio0")}</div></div>
+      <div class="grp"><div class="gh">Càng đáp</div><div class="slots">${sw("gear0")}${sw("gear1")}${sw("gear2")}</div></div>
+      <div class="grp"><div class="gh">Phanh</div><div class="slots">${sw("brake0")}${sw("brake1")}${sw("brake2")}</div></div>
+    </div>
+    <div class="center">
+      <div class="grp"><div class="gh">Trục <span class="must">● bắt buộc</span></div>
+        <div class="axisRow">${sl("axis0")}${dialSVG()}${sl("axis1")}</div>
+        <div class="axisTxt" id="axisTxt"></div></div>
+      <div class="grp"><div class="gh">Động cơ <span class="must">● bắt buộc</span></div>
+        <div class="engRow">${sl("eng0")}<div class="speedRead" id="speedRead"></div>${sl("eng1")}</div>
+        <div class="gauge">
+          <div class="gRow">${rng(2,12).map(n=>`<div class="gc" id="gc${n}">${n}</div>`).join("")}<div class="mk mkB" id="mkB"></div><div class="mk mkO" id="mkO"></div><div class="ptr hidden" id="ptr"></div></div>
+          <div class="gLeg" id="gLeg"></div>
+          <div class="gRow">${rng(2,12).map(n=>`<div class="bc" id="bc${n}"></div>`).join("")}<div class="mk mkR" id="mkR"></div></div>
+          <div class="gLeg" id="bLeg"></div>
+        </div></div>
+      <div class="grp"><div class="gh">Tập trung</div>
+        <div class="concRow">${sl("conc0")}${sl("conc1")}${sl("conc2")}<div class="cups" id="cups"></div><div class="rrTok" id="rrTok"></div></div></div>
+    </div>
+    <div class="col c1">
+      <div class="colh">Cơ phó<small id="pn1"></small></div>
+      <div class="grp"><div class="gh">Radio</div><div class="slots">${sl("radio1")}${sl("radio2")}</div></div>
+      <div class="grp"><div class="gh">Cánh tà</div><div class="slots vert">${sw("flap0")}${sw("flap1")}${sw("flap2")}${sw("flap3")}</div></div>
+    </div>
+  </div>`;
+}
+
+function onView(v){
+  const prev=view;
+  view=v;
+  if(!selDie()){ sel=null; adj=0; }
+  if(Math.abs(adj)>v.B.coffee){ adj=0; }
+  if(!v.rr) rrSel.clear(); else rrSel=new Set([...rrSel].filter(id=>v.my.some(d=>d.id===id)));
+  render();
+  const ended=v.phase==="end", wasEnded=prev&&prev.phase==="end"&&prev.flights===v.flights;
+  if(ended&&!wasEnded) setTimeout(showEnd,900);
+  if(!ended&&overlayId==="end") closeOverlay();
+  if(!ended&&overlayId==="confirm"&&!myTurn()) closeOverlay();
+  document.title = myTurn() ? "● Lượt bạn · Sky Team" : v.phase==="brief"&&!v.ready[v.me] ? "🎲 Sẵn sàng? · Sky Team" : "Sky Team";
+}
+
+function render(){
+  const v=view, B=v.B, me=v.me;
+  $("roundChip").innerHTML = `Vòng ${B.round}/${ROUNDS} · <span class="num">${altOf(B.round)}</span> ft`;
+  const tc=$("turnChip");
+  tc.textContent = v.phase==="end" ? (v.result.win?"Đã hạ cánh":"Rơi máy bay") : v.phase==="brief" ? "Bàn chiến thuật" : v.rr ? "Đang tung lại" : myTurn() ? "Lượt của bạn" : `Lượt ${ROLE[v.turn]}`;
+  tc.classList.toggle("me",myTurn());
+  $("lastMove").innerHTML = v.last ? `Vừa rồi: <b>${esc(v.last.text)}</b>` : "";
+  $("pn0").textContent=v.names[0]+(me===0?" (bạn)":""); $("pn1").textContent=v.names[1]+(me===1?" (bạn)":"");
+  renderBanner(); renderCockpit(); renderTray(); renderHint(); renderSide();
+}
+
+function renderBanner(){
+  const v=view, B=v.B, me=v.me, el=$("banner");
+  let cls="banner", h="";
+  if(v.phase==="brief"){
+    cls+=" brief";
+    const mr=v.ready[me], or=v.ready[1-me];
+    h=`<div class="bt"><b>Vòng ${B.round}/${ROUNDS} · ${altOf(B.round)} ft · Bàn chiến thuật</b>
+      <div class="small">${B.round===ROUNDS?"<b style='color:var(--amber)'>Vòng hạ cánh!</b> ":""}Hai bạn bàn kế hoạch, nhưng <b>không được nói về xúc xắc</b>. Khi đã tung thì giữ im lặng tới hết vòng.</div>
+      <div class="small">${esc(v.names[1-me])}: ${or?"✅ đã sẵn sàng":"⏳ đang bàn…"}</div></div>
+      <button class="btn gold" id="readyBtn" ${mr?"disabled":""}>${mr?"Đã sẵn sàng ✓":"🎲 Tung xúc xắc"}</button>`;
+  } else if(v.phase==="place"){
+    if(v.rr){
+      const mine=!v.rr.done[me];
+      h=`<div class="bt"><b>⟳ Tung lại</b><div class="small">${mine?"Bấm chọn các xúc xắc muốn tung lại (bên dưới) rồi xác nhận. Có thể giữ nguyên tất cả.":`Chờ ${esc(v.names[1-me])} chọn xúc xắc tung lại…`}</div></div>`;
+    } else {
+      if(myTurn()) cls+=" turn";
+      const w=[];
+      if(B.round<ROUNDS&&B.planes[B.pos]>0) w.push(`⚠ Còn ${B.planes[B.pos]} máy bay ở vị trí hiện tại: nếu động cơ đẩy máy bay tiến lên sẽ va chạm.`);
+      if(B.round<ROUNDS&&B.pos===APT) w.push(`Đang bay vòng chờ trên sân bay: tốc độ phải ≤ ${B.blue} để không vượt quá.`);
+      if(B.round<ROUNDS&&B.pos<APT&&APT-B.pos>2*(ROUNDS-B.round)) w.push("⚠ Không còn kịp tới sân bay!");
+      if(B.round===ROUNDS) w.push("Vòng hạ cánh: trục về 0, tốc độ ≤ phanh, đủ càng & cánh tà, dẹp sạch máy bay.");
+      h=`<div class="bt"><b>🤫 Giữ im lặng!</b> ${myTurn()?"Tới lượt bạn: chọn 1 xúc xắc rồi bấm ô sáng trên bảng điều khiển.":`Chờ ${esc(v.names[v.turn])} (${ROLE[v.turn]}) đặt xúc xắc<span class="dots"></span>`}
+        ${w.map(x=>`<div class="warn">${x}</div>`).join("")}</div>`;
+    }
+  } else {
+    const r=v.result;
+    cls+=r.win?" win":" lose";
+    h=`<div class="bt"><b>${r.win?"🎉 Hạ cánh an toàn!":"💥 "+LOSS[r.reason]}</b></div><button class="btn ghost" id="endBtn">Xem kết quả</button>`;
+  }
+  el.className=cls; el.innerHTML=h;
+  if($("readyBtn")) $("readyBtn").onclick=()=>sendAction({k:"ready"});
+  if($("endBtn")) $("endBtn").onclick=showEnd;
+}
+
+function slotLabel(sid){
+  const s=SP[sid];
+  if(s.t==="axis") return `<span class="lbl t">trục</span>`;
+  if(s.t==="eng") return `<span class="lbl t">đ.cơ</span>`;
+  if(s.t==="radio") return `<span class="lbl t">📻</span>`;
+  if(s.t==="conc") return `<span class="lbl t">☕</span>`;
+  return `<span class="lbl">${s.vals.join("·")}</span>`;
+}
+function previewOf(sid,v){
+  const B=cloneB(view.B); B.coffee-=Math.abs(adj);
+  return resolve(B,view.me,sid,v);
+}
+
+function renderCockpit(){
+  const v=view, B=v.B, me=v.me, sv=myTurn()?selVal():null;
+  // đường tiếp cận
+  let tgt=0;
+  if(sv!=null&&hov&&SP[hov].t==="radio"&&!placeErr(B,me,hov,sv,v.my.length)) tgt=B.pos+sv-1;
+  for(let i=1;i<=APT;i++){
+    const el=$("ac"+i);
+    el.classList.toggle("past",i<B.pos); el.classList.toggle("tgt",i===tgt);
+    $("acr"+i).textContent = i>=B.pos ? i-B.pos+1 : "";
+    const n=B.planes[i], f=$("tf"+i);
+    const hh = n>3 ? planeSvg("tp")+`<span class="tfx">×${n}</span>` : planeSvg("tp").repeat(n);
+    if(f._h!==hh){ f.innerHTML=hh; f._h=hh; }
+  }
+  $("own").style.setProperty("--pos",B.pos);
+  for(let r=1;r<=ROUNDS;r++){
+    const el=$("al"+r); el.classList.toggle("cur",r===B.round); el.classList.toggle("past",r<B.round);
+    $("alr"+r).classList.toggle("hidden",!(REROLL_AT.includes(r)&&r>B.round));
+  }
+  // ô đặt xúc xắc
+  for(const sid of SIDS){
+    const el=$("s_"+sid), d=B.slots[sid], s=SP[sid];
+    let cls="slot "+(s.r<0?"rx":"r"+s.r), html;
+    if(d){
+      cls+=" full"; html=dieHTML(d.v,d.r);
+      if(v.last&&v.last.sid===sid) cls+=" lastp";
+      if(!el._die) cls+=" pop";
+    } else {
+      html=slotLabel(sid)+(s.mand?'<span class="mand">!</span>':"");
+      if(sv!=null&&!placeErr(B,me,sid,sv,v.my.length)){
+        cls+=" ok";
+        if(previewOf(sid,sv).loss) cls+=" warn";
+        if(hov===sid) cls+=" hv";
+      }
+    }
+    el._die=!!d;
+    el.className=cls;
+    if(el._h!==html){ el.innerHTML=html; el._h=html; }
+    if(s.t==="gear"||s.t==="flap"||s.t==="brake") $("l_"+sid).classList.toggle("on",!!arrOf(B,s.t)[s.i]);
+  }
+  // trục
+  $("needle").style.transform=`rotate(${B.axis*25}deg)`;
+  const at=$("axisTxt"); at.textContent="Trục: "+axisTxt(B.axis); at.classList.toggle("danger",Math.abs(B.axis)>=2);
+  // động cơ + thước tốc độ
+  const e0=B.slots.eng0, e1=B.slots.eng1;
+  $("speedRead").innerHTML = B.speed!=null
+    ? `<small>Tốc độ</small><b>${B.speed}</b><span>${B.round===ROUNDS?(B.speed<=B.brake&&B.brake>=2?"✔ dưới phanh":"✖ quá phanh"):(()=>{const n=advOf(B,B.speed);return n?`đã tiến ${n} ô`:"đứng yên";})()}</span>`
+    : `<small>Tốc độ</small><b>${e0||e1?(e0||e1).v+"+?":"–"}</b>`;
+  for(let n=2;n<=12;n++){
+    $("gc"+n).className="gc "+(n<=B.blue?"z0":n<=B.orange?"z1":"z2");
+    $("bc"+n).className="bc"+(B.brake>=2&&n<=B.brake?" ok":"");
+  }
+  const pct=x=>`${(x-1)/11*100}%`;
+  $("mkB").style.left=pct(B.blue); $("mkO").style.left=pct(B.orange); $("mkR").style.left=pct(Math.max(1,B.brake));
+  const ptr=$("ptr");
+  if(B.speed!=null){ ptr.classList.remove("hidden"); ptr.style.left=`${(Math.min(12,B.speed)-1.5)/11*100}%`; } else ptr.classList.add("hidden");
+  $("gLeg").innerHTML = B.round===ROUNDS
+    ? `<span>Vòng hạ cánh: động cơ <b>không</b> đẩy máy bay, chỉ so với phanh</span>`
+    : `<span>≤<b>${B.blue}</b> đứng yên</span><span><b>${B.blue+1}–${B.orange}</b> tiến 1</span><span>${B.orange>=12?"<b>không thể</b> tiến 2":`≥<b>${B.orange+1}</b> tiến 2`}</span>`;
+  $("bLeg").innerHTML = `<span><span style="color:var(--red)">■</span> Phanh: ${B.brake>=2?`tốc độ hạ cánh phải ≤ <b>${B.brake}</b>`:"<b>chưa kéo</b> (cần ít nhất phanh 2)"}</span>`;
+  // cà phê & tung lại
+  $("cups").innerHTML=[0,1,2].map(i=>`<span class="cup ${i<B.coffee?"on":""}">☕</span>`).join("");
+  const canRR=v.phase==="place"&&!v.rr&&B.rerolls>0;
+  $("rrTok").innerHTML = `⟳ ×${B.rerolls}` + (canRR?` <button class="btn green" id="useRR">Dùng</button>`:"");
+  if($("useRR")) $("useRR").onclick=()=>{
+    openOverlay(`<h2>⟳ Dùng lượt tung lại?</h2><p class="tag center-t">Cả hai người đều được tung lại các xúc xắc tuỳ chọn còn trên tay (một lần). Còn ${B.rerolls} lượt.</p>
+      <div class="row"><button class="btn green" id="yesRR">Dùng</button><button class="btn ghost" id="noRR">Thôi</button></div>`,"confirm");
+    $("yesRR").onclick=()=>{ closeOverlay(); sendAction({k:"useReroll"}); };
+    $("noRR").onclick=closeOverlay;
+  };
+}
+
+function renderTray(){
+  const v=view, B=v.B, me=v.me, el=$("tray");
+  const rrMine=!!(v.rr&&!v.rr.done[me]);
+  el.classList.toggle("turn",myTurn()||rrMine);
+  let h=`<div><div class="tl"><span class="badge r${me}">${ROLE[me]}</span> Xúc xắc của bạn</div><div class="myDice">`;
+  if(!v.my.length) h+=`<span class="small">${v.phase==="brief"?"Chưa tung":v.phase==="end"?"—":"Đã đặt hết"}</span>`;
+  for(const d of v.my){
+    let c="", dc="";
+    if(sel===d.id&&myTurn()) c+=" sel";
+    if(rrSel.has(d.id)) c+=" mark";
+    if(!seen.has(d.id)){ dc="roll"; seen.add(d.id); }
+    const val = sel===d.id&&myTurn() ? d.v+adj : d.v;
+    h+=`<span class="dw${c}" data-die="${d.id}">${dieHTML(val,me,dc)}${sel===d.id&&myTurn()&&adj?`<span class="adjTag">${adj>0?"+":""}${adj}☕</span>`:""}</span>`;
+  }
+  h+=`</div></div>`;
+  const d=selDie();
+  if(d&&myTurn()){
+    const left=B.coffee-Math.abs(adj);
+    const canM = d.v+adj>1 && (adj>0||left>0), canP = d.v+adj<6 && (adj<0||left>0);
+    h+=`<div class="adj"><button id="adjM" ${canM?"":"disabled"} title="Dùng cà phê giảm 1">−</button><span>☕ còn ${left}</span><button id="adjP" ${canP?"":"disabled"} title="Dùng cà phê tăng 1">+</button></div>`;
+  }
+  if(rrMine) h+=`<button class="btn gold" id="rrGo">${rrSel.size?`Tung lại ${rrSel.size} viên`:"Giữ nguyên"}</button>`;
+  h+=`<div class="sp"></div><div class="pd"><span class="small">${esc(v.names[1-me])} · ${ROLE[1-me]}</span><div class="pDice">${v.other?hidDie(1-me).repeat(v.other):'<span class="small">—</span>'}</div></div>`;
+  el.innerHTML=h;
+  if($("adjM")) $("adjM").onclick=()=>{ adj--; render(); };
+  if($("adjP")) $("adjP").onclick=()=>{ adj++; render(); };
+  if($("rrGo")) $("rrGo").onclick=()=>{ const ids=[...rrSel]; rrSel.clear(); sendAction({k:"rerollPick",ids}); };
+}
+
+function renderHint(){
+  const v=view, B=v.B, me=v.me, el=$("hint");
+  let t="";
+  if(v.phase==="brief") t = v.ready[me] ? `Chờ ${esc(v.names[1-me])} sẵn sàng<span class="dots"></span>` : "Bấm <b>🎲 Tung xúc xắc</b> khi đã bàn xong chiến thuật.";
+  else if(v.phase==="end") t="Chuyến bay đã kết thúc.";
+  else if(v.rr) t = !v.rr.done[me] ? "Chọn xúc xắc muốn tung lại rồi bấm nút xác nhận." : "Đang chờ đồng đội tung lại…";
+  else if(!myTurn()) t = "";
+  else {
+    const sv=selVal();
+    if(sv==null){
+      const ml=mandLeft(B,me);
+      t = v.my.length<=ml ? `Bạn phải đặt xúc xắc vào <b>Trục</b>${ml>1?" và <b>Động cơ</b>":""}${ml===1?(B.slots["axis"+me]?" (Động cơ)":" (Trục)"):""} — bắt buộc mỗi vòng.` : "Chọn một xúc xắc của bạn bên dưới.";
+    } else if(hov&&!B.slots[hov]&&!placeErr(B,me,hov,sv,v.my.length)){
+      const res=previewOf(hov,sv);
+      t=`Đặt <b>${sv}</b> vào <b>${spaceName(hov)}</b>: ${res.t}.`+(res.loss?`<br><span class="bad"><b>⚠ ${LOSS[res.loss]}</b></span>`:"")+partnerTip(hov,sv);
+    } else {
+      const n=SIDS.filter(s=>!placeErr(B,me,s,sv,v.my.length)).length;
+      t = n ? `Viên <b>${sv}</b> đặt được vào ${n} ô đang sáng.${B.coffee?" Dùng <b>−/+</b> để tiêu cà phê đổi giá trị.":""}`
+            : `<span class="bad">Viên ${sv} không đặt được vào ô nào${B.coffee?", thử dùng cà phê":""}.</span>`;
+    }
+  }
+  el.innerHTML=t;
+}
+// gợi ý (thông tin công khai): nếu mình đặt trước, đồng đội cần giá trị nào
+function partnerTip(sid,v){
+  const B=view.B, s=SP[sid], os=s.t+(1-view.me);
+  if((s.t!=="axis"&&s.t!=="eng")||B.slots[os]) return "";
+  const B2=cloneB(B); B2.coffee-=Math.abs(adj); resolve(B2,view.me,sid,v);
+  const out=[];
+  for(let u=1;u<=6;u++){ const B3=cloneB(B2), q=resolve(B3,1-view.me,os,u); out.push(q.loss?"✖":s.t==="axis"?(B3.axis===0?"0":String(Math.abs(B3.axis))):(B3.round===ROUNDS?"✔":"+"+(B3.pos-B.pos))); }
+  return `<br><span class="small">Đồng đội đặt 1–6 thì ${s.t==="axis"?"trục lệch":"kết quả"}: ${out.map((x,i)=>`<b>${i+1}</b>→${x}`).join(" · ")}</span>`;
+}
+
+function renderSide(){
+  const v=view, B=v.B, me=v.me;
+  $("crew").innerHTML=[0,1].map(r=>`<div class="crew ${v.phase==="place"&&!v.rr&&v.turn===r?"act":""}">
+      <span class="badge r${r}">${ROLE[r]}</span><span class="nm">${esc(v.names[r])}${r===me?" (bạn)":""}</span><span class="sp"></span>
+      <span class="small">${v.phase==="brief"?(v.ready[r]?"✅":"⏳"):v.phase==="place"?`🎲 ${r===me?v.my.length:v.other}`:""}</span></div>`).join("");
+  const pl=sum(B.planes), g=sum(B.gear), f=sum(B.flaps);
+  const it=[
+    {ok:pl===0, t:`Dọn sạch máy bay: còn <b>${pl}</b> ✈ trên đường tiếp cận`},
+    {ok:g===3&&f===4, t:`Càng đáp <b>${g}/3</b> · Cánh tà <b>${f}/4</b>`},
+    {ok:B.axis===0, t:`Trục thăng bằng: <b>${axisTxt(B.axis)}</b>`},
+    {ok:B.brake>=2&&(B.speed==null||B.round<ROUNDS||B.speed<=B.brake), t:B.brake>=2?`Phanh <b>${B.brake}</b>: tốc độ hạ cánh tối đa <b>${B.brake}</b>`:"Phanh: <b>chưa kéo</b> (cần ít nhất phanh 2)"}
+  ];
+  const d=APT-B.pos, left=ROUNDS-B.round;
+  $("checks").innerHTML=it.map((x,i)=>`<div class="ck ${x.ok?"ok":""}"><span class="m">${x.ok?"✔":"ABCD"[i]}</span><span>${x.t}</span></div>`).join("")
+    +`<div class="ckFoot">${d?`Cách sân bay <b>${d}</b> ô`:"<b>Đã tới sân bay</b>"} · ${left?`còn <b>${left}</b> vòng trước vòng hạ cánh`:"<b>vòng hạ cánh</b>"}</div>`;
+  $("chatPanel").classList.toggle("hidden",v.bot);
+  const ci=$("chatInput"), quiet=v.phase==="place";
+  ci.disabled=quiet; $("chatBtn").disabled=quiet;
+  ci.placeholder = quiet ? "Đang đặt xúc xắc — giữ im lặng 🤫" : "Bàn kế hoạch (không nói về xúc xắc)";
+  $("log").innerHTML=v.log.slice().reverse().map(l=>`<div class="${l.sys?"sys":""} ${l.chat?"chat":""} ${l.r!=null&&!l.sys?"r"+l.r:""}">${esc(l.t)}</div>`).join("");
+}
+
+/* ---- events ---- */
+$("tray").addEventListener("click",e=>{
+  const w=e.target.closest("[data-die]"); if(!w||!view) return;
+  const id=+w.dataset.die;
+  if(view.rr&&!view.rr.done[view.me]){ rrSel.has(id)?rrSel.delete(id):rrSel.add(id); render(); return; }
+  if(view.phase!=="place") return;
+  if(!myTurn()){ toast(view.rr?"Đang tung lại.":"Chưa tới lượt bạn."); return; }
+  if(sel===id){ sel=null; adj=0; } else { sel=id; adj=0; }
+  tapPend=null; render();
+});
+const cockpit=$("cockpit");
+let lastPT="mouse", tapPend=null;
+cockpit.addEventListener("pointerdown",e=>{ lastPT=e.pointerType||"mouse"; });
+cockpit.addEventListener("pointerover",e=>{
+  if(e.pointerType==="touch") return;
+  const s=e.target.closest("[data-sid]"), id=s?s.dataset.sid:null;
+  if(id!==hov){ hov=id; if(view){ renderCockpit(); renderHint(); } }
+});
+cockpit.addEventListener("pointerleave",()=>{ if(hov){ hov=null; if(view){ renderCockpit(); renderHint(); } } });
+cockpit.addEventListener("click",e=>{
+  const s=e.target.closest("[data-sid]"); if(!s||!view) return;
+  const sid=s.dataset.sid, B=view.B;
+  if(view.phase!=="place") return;
+  if(!myTurn()){ toast(view.rr?"Đang tung lại xúc xắc.":"Chưa tới lượt bạn."); return; }
+  const d=selDie();
+  if(!d){ toast("Chọn một xúc xắc của bạn trước."); return; }
+  const v=d.v+adj, err=placeErr(B,view.me,sid,v,view.my.length);
+  if(err){ toast(err); return; }
+  if(lastPT==="touch"&&tapPend!==sid){ tapPend=hov=sid; renderCockpit(); renderHint(); return; }   // chạm lần 1 để xem trước
+  const res=previewOf(sid,v), act={k:"place",die:d.id,sid,adj};
+  const go=()=>{ sel=null; adj=0; hov=null; tapPend=null; sendAction(act); };
+  if(res.loss){
+    openOverlay(`<h2>⚠ Nguy hiểm!</h2><p class="center-t"><b>${LOSS[res.loss]}</b></p><p class="tag center-t">Đặt ${v} vào ${spaceName(sid)} sẽ làm thua ngay lập tức. Vẫn đặt?</p>
+      <div class="row"><button class="btn red" id="yesP">Vẫn đặt</button><button class="btn ghost" id="noP">Thôi</button></div>`,"confirm");
+    $("yesP").onclick=()=>{ closeOverlay(); go(); };
+    $("noP").onclick=closeOverlay;
+  } else go();
+});
+document.addEventListener("keydown",e=>{
+  if(!view||e.target.tagName==="INPUT") return;
+  if(e.key==="Escape"&&sel!=null){ sel=null; adj=0; render(); }
+  if(/^[1-4]$/.test(e.key)&&myTurn()){ const d=view.my[+e.key-1]; if(d){ sel=sel===d.id?null:d.id; adj=0; render(); } }
+});
+function sendChat(){ const t=$("chatInput").value.trim(); if(!t) return; $("chatInput").value=""; sendAction({k:"chat",t}); }
+$("chatBtn").onclick=sendChat;
+$("chatInput").addEventListener("keydown",e=>{ if(e.key==="Enter") sendChat(); });
+$("restartBtn").onclick=()=>{
+  if(!view) return;
+  openOverlay(`<h2>Bay lại từ đầu?</h2><p class="tag center-t">Chuyến bay hiện tại sẽ bị huỷ${view.bot?"":" cho cả hai người"}.</p>
+    <div class="row"><button class="btn red" id="yesR">Bay lại</button><button class="btn ghost" id="noR">Thôi</button></div>`,"restart");
+  $("yesR").onclick=()=>{ closeOverlay(); sendAction({k:"restart"}); };
+  $("noR").onclick=closeOverlay;
+};
+
+function showEnd(){
+  const v=view; if(!v||v.phase!=="end") return;
+  const r=v.result, B=v.B, c=checks(B);
+  const ck=[
+    [c.A,"Dọn sạch máy bay trên đường tiếp cận"],[c.B,"Hạ đủ 3 càng đáp và 4 cánh tà"],
+    [c.C,"Trục thăng bằng"],[c.D,"Tốc độ hạ cánh ≤ lực phanh"]
+  ];
+  const showCk=r.win||r.reason==="landing";
+  openOverlay(`
+    <h2>${r.win?"🎉 Hạ cánh an toàn!":"💥 Chuyến bay thất bại"}</h2>
+    <p class="tag center-t" style="margin:0 0 12px">${r.win?"Hành khách vỗ tay rào rào. Tổ lái tuyệt vời!":LOSS[r.reason]}</p>
+    ${showCk?ck.map(([ok,t],i)=>`<div class="ck ${ok?"ok":""}"><span class="m">${ok?"✔":"✖"}</span><span><b>${"ABCD"[i]}.</b> ${t}</span></div>`).join(""):""}
+    <p class="small center-t">Vòng ${B.round}/${ROUNDS} · ${altOf(B.round)} ft · vị trí ${B.pos}/${APT} · trục ${axisTxt(B.axis)}${B.speed!=null&&B.round===ROUNDS?` · tốc độ ${B.speed}, phanh ${B.brake}`:""}</p>
+    <div class="row"><button class="btn green" id="againBtn">Bay lại</button><button class="btn blue" id="swapBtn">Bay lại · đổi ghế</button></div>
+    <div class="row"><button class="btn ghost" id="viewBoardBtn">Xem bảng điều khiển</button></div>`, "end");
+  $("againBtn").onclick=()=>sendAction({k:"rematch"});
+  $("swapBtn").onclick=()=>sendAction({k:"rematch",swap:true});
+  $("viewBoardBtn").onclick=closeOverlay;
+}
+
+function showRules(){
+  openOverlay(`<h2>Luật chơi Sky Team</h2><div class="rules">
+    <p>Trò chơi <b>hợp tác</b> 2 người: <b style="color:var(--pB)">Phi công</b> (xúc xắc xanh) và <b style="color:var(--pO)">Cơ phó</b> (xúc xắc cam) cùng hạ cánh máy bay xuống sân bay YUL Montréal.
+      Chuyến bay gồm <b>7 vòng</b>, mỗi vòng máy bay hạ 1000 ft (6000 → 0). Vòng thứ 7 là <b>vòng hạ cánh</b>.</p>
+    <h3>Mỗi vòng</h3>
+    <ul>
+      <li><b>Bàn chiến thuật:</b> được nói chuyện, nhưng <b>không được nói về xúc xắc</b>. Xong thì cả hai bấm tung 4 xúc xắc (giấu kín).</li>
+      <li><b>Đặt xúc xắc:</b> thay phiên mỗi người đặt 1 viên vào ô trống của màu mình (ô xám dùng chung). Lúc này <b>giữ im lặng</b>. Chấm trên thanh độ cao cho biết ai đặt trước.</li>
+      <li>Mỗi vòng, mỗi người <b>bắt buộc</b> đặt 1 viên vào <b>Trục</b> và 1 viên vào <b>Động cơ</b>.</li>
+      <li>Đặt đủ 8 viên thì hết vòng, máy bay hạ độ cao.</li>
+    </ul>
+    <h3>Các ô điều khiển</h3>
+    <ul>
+      <li><b>Trục:</b> khi đủ 2 viên, trục nghiêng về phía người đặt số lớn hơn, nghiêng bằng hiệu hai số. Trục chạm dấu ✖ (lệch 3) là <b>rơi máy bay</b>.</li>
+      <li><b>Động cơ:</b> tổng 2 viên là tốc độ. Nhỏ hơn hoặc bằng vạch xanh: đứng yên. Giữa vạch xanh và cam: tiến 1 ô. Lớn hơn vạch cam: tiến 2 ô.</li>
+      <li><b>Va chạm:</b> phải tiến lên trong khi ô hiện tại còn máy bay khác là thua. Đang ở sân bay mà còn phải tiến là <b>bay quá sân bay</b>, cũng thua.</li>
+      <li><b>Radio</b> (Phi công 1 ô, Cơ phó 2 ô): đặt viên giá trị X để dẹp 1 máy bay ở ô thứ X tính từ vị trí hiện tại (1 = ô đang đứng). Số nhỏ ở góc mỗi ô trên đường tiếp cận chính là X.</li>
+      <li><b>Càng đáp</b> (chỉ Phi công, 1-2 / 3-4 / 5-6, thứ tự tuỳ ý): mỗi càng hạ đẩy vạch xanh lên 1.</li>
+      <li><b>Cánh tà</b> (chỉ Cơ phó, 1-2 / 2-3 / 4-5 / 5-6, theo thứ tự từ trên xuống): mỗi cánh tà đẩy vạch cam lên 1.</li>
+      <li><b>Phanh</b> (chỉ Phi công, đúng 2 rồi 4 rồi 6): đưa lực phanh lên 2 / 4 / 6. Phanh chỉ có tác dụng ở vòng hạ cánh.</li>
+      <li><b>Tập trung</b> (ai cũng đặt được, số nào cũng được): nhận 1 cà phê (tối đa 3). Khi đặt xúc xắc, mỗi cà phê đổi giá trị viên đó ±1 (không vượt 1–6). Cà phê dùng chung.</li>
+      <li><b>Tung lại ⟳:</b> nhận ở 6000 ft và 2000 ft. Bất kỳ ai dùng được lúc đang đặt xúc xắc: cả hai được tung lại các viên tuỳ chọn còn trên tay.</li>
+    </ul>
+    <h3>Hạ cánh</h3>
+    <ul>
+      <li>Hết vòng 6 mà máy bay chưa tới sân bay là thua. Tới sớm thì phải bay vòng chờ (giữ tốc độ thấp để không vượt quá).</li>
+      <li>Ở vòng hạ cánh, động cơ không đẩy máy bay nữa mà so với phanh. Cuối vòng thắng nếu: <b>A.</b> không còn máy bay nào trên đường tiếp cận; <b>B.</b> đủ 3 càng đáp và 4 cánh tà; <b>C.</b> trục thăng bằng; <b>D.</b> tốc độ ≤ lực phanh.</li>
+    </ul>
+    <h3>Cách bấm</h3>
+    <ul>
+      <li>Bấm một xúc xắc của bạn (hoặc phím 1–4), các ô đặt được sẽ sáng xanh. Ô viền đỏ là nước đi làm thua ngay.</li>
+      <li>Rê chuột vào ô để xem trước kết quả. Trên điện thoại: chạm ô một lần để xem, chạm lần nữa để đặt.</li>
+      <li>Nút <b>− / +</b> bên cạnh xúc xắc đang chọn dùng cà phê để đổi giá trị.</li>
+    </ul>
+    </div><div class="row"><button class="btn green" id="closeRules">Đã hiểu</button></div>`, "rules");
+  $("closeRules").onclick=closeOverlay;
+}
+
+/* ================= BOOT ================= */
+function setRole(r){ rolePref=r; for(const b of $("roleSeg").children) b.classList.toggle("on",+b.dataset.r===r); try{ localStorage.setItem("skyteam-role",String(r)); }catch(e){} }
+$("roleSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(b) setRole(+b.dataset.r); });
+$("createBtn").onclick=createRoom;
+$("joinBtn").onclick=joinRoom;
+$("botBtn").onclick=playBot;
+$("rulesBtn0").onclick=showRules;
+$("rulesBtn").onclick=()=>{ const prev=overlayId; showRules(); if(prev==="end") $("closeRules").onclick=showEnd; };
+$("copyBtn").onclick=()=>{ navigator.clipboard.writeText(roomLink()).then(()=>toast("Đã sao chép link!"),()=>toast("Không sao chép được, hãy copy thủ công.")); };
+$("codeInput").addEventListener("keydown",e=>{ if(e.key==="Enter") joinRoom(); });
+try{ const n=localStorage.getItem("skyteam-name"); if(n) $("nameInput").value=n; }catch(e){}
+try{ setRole(localStorage.getItem("skyteam-role")==="1"?1:0); }catch(e){ setRole(0); }
+const qs=new URLSearchParams(location.search);
+if(qs.get("room") && !qs.get("host")) $("codeInput").value=qs.get("room").toUpperCase();
+</script>
+</body>
+</html>
